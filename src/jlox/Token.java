@@ -1,9 +1,5 @@
 package jlox;
 
-import java.util.HashMap;
-import java.util.Map;
-import jlox.TokenType.*;
-
 class Token{
 	
 	final TokenType type;

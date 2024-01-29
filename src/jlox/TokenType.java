@@ -2,7 +2,7 @@ package jlox;
 
 
 // NOTE that many operators such as += etc are  not part of  the language
-enum TokenType{
+public enum TokenType{
 	
 	// Single character tokens
 	PLUS, MINUS, STAR, SLASH, LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE, COMMA, DOT, SEMICOLON,
