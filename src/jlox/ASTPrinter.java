@@ -39,7 +39,7 @@ class ASTPrinter implements Expr.Visitor<String>{
 		s += " ( ";
 		s += name + " ";
 		for(Expr ex : exprs) {
-			s += ex.accept(this);
+			s += ex.accept(this) +" ";
 		}
 		s += " ) ";
 		return s;

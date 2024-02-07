@@ -13,11 +13,26 @@ import static jlox.TokenType.*;
 
 class Parser{
 	
+	private static class ParseError extends RuntimeException {}
+	
 	private ArrayList<Token> tokens;
 	private int current = 0;
 	
 	Parser(ArrayList<Token> tokens){
 		this.tokens = tokens;
+	}
+	
+	// kick the parser off.
+	Expr parse() {
+		
+		// currently this is the only method that's handling exceptions.
+		// so parseError will straight up stop the parser.
+		try {
+			return expression();
+		}
+		catch(ParseError e) {
+			return null;
+		}
 	}
 	
 	
@@ -104,16 +119,57 @@ class Parser{
 		if(match(TRUE)) return new Literal(true);
 		if(match(FALSE)) return new Literal(false);
 		if(match(NIL)) return new Literal(null);
+//		if(match(IDENTIFIER)) return new Variable();
 		
 		if(match(LEFT_PAREN)) {
 			Expr expr = expression();
 			consume(RIGHT_PAREN, "Expected ) after expression");
 			return new Grouping(expr);
 		}
+		// stumbled on a token that can't begin an expression.
+		// eg. a + + ...
+		// all expressions begin with a primary expression.
+		
+		throw error(peek(),"Expected expression.");
+	}
+	
+	private Token consume(TokenType type, String message) {
+		if(check(type)) return advance();
+		throw error(peek(),message);
 	}
 	
 	
+	private ParseError error(Token token, String message) {
+		Lox.error(token,message);
+		return new ParseError();
+	}
 	
+	/* To unwind the parser and reach the next token from which parsing can begin as normal.
+	 * 
+	 */
+	private void synchronize(){
+		advance();
+		
+		while(!isAtEnd()) {
+			// if end of statement has been found
+			if(previous().type == SEMICOLON) return;
+			
+			// or if the next is one of these keywords.
+			switch(peek().type) {
+				case CLASS:
+				case FUN:
+				case VAR:
+				case FOR:
+				case IF:
+				case WHILE:
+				case PRINT:
+				case RETURN:
+				return;
+			}
+			advance();
+		}
+		
+	}
 	
 	public Token advance() {
 		if(!isAtEnd()) current++;
