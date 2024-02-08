@@ -11,29 +11,93 @@ import jlox.TokenType;
 // Mwahaha
 class Interpreter implements Expr.Visitor<Object>{
 
+	void interpret(Expr expression) {
+		try {
+			Object res = evaluate(expression);
+			System.out.println(makeString(res));
+		}
+		catch(RuntimeError error) {
+			Lox.runtimeError(error);
+		}
+	}
+	
+	private String makeString(Object ob) {
+		if(ob == null) return "nil";
+		
+		if(ob instanceof Double) {
+			String text = ob.toString();
+			if(text.endsWith(".0")) {
+				text = text.substring(0,text.length() - 2);
+			}
+			return text;
+		}
+		
+		return ob.toString();
+	}
+	
+	private void checkNumberOperand(Token op, Object right) {
+		if(right instanceof Double) return;
+		throw new RuntimeError(op, "Expected a Number type operand.");
+	}
+	
+	private void checkNumberOperands(Token op, Object left, Object right) {
+		if(left instanceof Double && right instanceof Double) return;
+		throw new RuntimeError(op, "Expected both Number type operands.");
+	}
+	
+	
 	@Override
 	public Object visitBinaryExpr(Binary expr) {
 		Object left = evaluate(expr.left);
 		Object right = evaluate(expr.right);
 		
 		switch(expr.op.type) {
+		
+		case GREATER:
+			checkNumberOperands(expr.op, left, right);
+			return (double)left > (double)right;
+			
+		case GREATER_EQUAL:
+			checkNumberOperands(expr.op, left, right);
+			return (double)left >= (double)right;
+			
+		case LESS:
+			checkNumberOperands(expr.op, left, right);
+			return (double)left < (double)right;
+			
+		case EQUAL_EQUAL:
+			checkNumberOperands(expr.op, left, right);
+			return (double)left == (double)right;
+		
+		case BANG_EQUAL:
+			checkNumberOperands(expr.op, left, right);
+			return (double)left != (double)right;
+		
+		case LESS_EQUAL:
+			checkNumberOperands(expr.op, left, right);
+			return (double)left <= (double)right;
+			
 		case MINUS:
+			checkNumberOperands(expr.op, left, right);
 			return (double)left - (double)right;
 			
 		case SLASH:
+			checkNumberOperands(expr.op, left, right);
 			return (double)left / (double)right;
 			
 		case STAR:
+			checkNumberOperands(expr.op, left, right);
 			return (double)left * (double)right;
 		
 		case PLUS:
+			
 			if(left instanceof Double && right instanceof Double) {
 				return (double)left + (double)right;
 			}
 			else if(left instanceof String && right instanceof String) {
 				return (String)left + (String)right;
 			}
-			break;
+			throw new RuntimeError(expr.op, "Operands must be both Numbers or Strings.");
 		}
 		// Error or unreachable
 		return null;
@@ -54,8 +118,10 @@ class Interpreter implements Expr.Visitor<Object>{
 		
 		switch(op.type) {
 		case MINUS:
+			checkNumberOperand(expr.op, right);
 			return -(double)right;
 		case BANG:
+
 			return !isTruthy(right);
 		}
 		
