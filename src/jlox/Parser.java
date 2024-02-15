@@ -1,6 +1,7 @@
 package jlox;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import jlox.Expr.Binary;
 import jlox.Expr.Grouping;
@@ -23,12 +24,18 @@ class Parser{
 	}
 	
 	// kick the parser off.
-	Expr parse() {
+	List<Stmt> parse() {
 		
 		// currently this is the only method that's handling exceptions.
 		// so parseError will straight up stop the parser.
+		List<Stmt> stmts = new ArrayList<Stmt>();
+		
 		try {
-			return expression();
+			while(!isAtEnd()) {
+				stmts.add(statement());
+			}
+			return stmts;
+			
 		}
 		catch(ParseError e) {
 			return null;
@@ -38,6 +45,26 @@ class Parser{
 	
 	public Expr expression() {
 		return equality();
+	}
+	
+	private Stmt statement() {
+		if(match(PRINT)) return printStatement();
+		
+		return expressionStatement();
+	}
+	
+	private Stmt printStatement() {
+		Expr value = expression();
+		consume(SEMICOLON, "Expected ; after print stamtent");
+		
+		return new Stmt.Print(value);
+	}
+	
+	private Stmt expressionStatement() {
+		Expr value = expression();
+		consume(SEMICOLON, "Expected ; after expression");
+		
+		return new Stmt.Expression(value);
 	}
 	
 	public Expr equality() {

@@ -1,25 +1,37 @@
 package jlox;
 
+import java.util.List;
+
 import jlox.Expr.Binary;
 import jlox.Expr.Grouping;
 import jlox.Expr.Literal;
 import jlox.Expr.Unary;
+import jlox.Stmt.Expression;
+import jlox.Stmt.Print;
 import jlox.TokenType;
 
 // this  class is a visitor with return type Object...as it should be ig
 // I can make operators do anything I want!
 // Mwahaha
-class Interpreter implements Expr.Visitor<Object>{
+// Expressions return an object
+// Statement either print the object return (by the underlying expression) or save some change in the program's state. Either way, they don't return anything.
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
 
-	void interpret(Expr expression) {
+	void interpret(List<Stmt> statements) {
 		try {
-			Object res = evaluate(expression);
-			System.out.println(makeString(res));
+			for(Stmt s : statements) {
+				execute(s);
+			}
 		}
 		catch(RuntimeError error) {
 			Lox.runtimeError(error);
 		}
 	}
+	
+	private void execute(Stmt s){
+		s.accept(this);
+	}
+	
 	
 	private String makeString(Object ob) {
 		if(ob == null) return "nil";
@@ -161,6 +173,19 @@ class Interpreter implements Expr.Visitor<Object>{
 		
 		return expr.value;
 		
+	}
+
+	@Override
+	public Void visitExpressionStmt(Expression stmt) {
+		evaluate(stmt.expr);
+		return null;
+	}
+
+	@Override
+	public Void visitPrintStmt(Print stmt) {
+		Object val = evaluate(stmt.expr);
+		System.out.println(makeString(val));
+		return null;
 	}
 	
 	
